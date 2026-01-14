@@ -358,6 +358,9 @@ import PhoneNumberKit
                     } else {
                         completionHandler(false)
                     }
+                    @unknown default:
+                    // Handle unknown default case
+                     completionHandler(false)
                 }
     }
 
@@ -489,7 +492,7 @@ import PhoneNumberKit
     }
 }
 // MARK: - CNContactViewControllerDelegate
-extension ContactsX: CNContactViewControllerDelegate {
+extension ContactsX {
     func contactViewController(_ viewController: CNContactViewController,
                                didCompleteWith contact: CNContact?) {
         // Fermer le navigation controller parent
