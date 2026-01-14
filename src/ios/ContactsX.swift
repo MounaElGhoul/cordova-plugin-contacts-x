@@ -2,7 +2,7 @@ import Contacts
 import ContactsUI
 import PhoneNumberKit
 
-@objc(ContactsX) class ContactsX : CDVPlugin, CNContactPickerDelegate {
+@objc(ContactsX) class ContactsX : CDVPlugin, CNContactPickerDelegate, CNContactViewControllerDelegate {
 
     var _callbackId: String?
     static var _PhoneNumberKitInstance: PhoneNumberKit? = nil;
@@ -69,6 +69,12 @@ import PhoneNumberKit
         }
         if(options.organizationName){
             keysToFetch.append(CNContactOrganizationNameKey)
+        }
+        if(options.jobTitle){
+            keysToFetch.append(CNContactJobTitleKey)
+        }
+        if(options.note){
+            keysToFetch.append(CNContactNoteKey)
         }
         return keysToFetch;
     }
@@ -158,7 +164,9 @@ import PhoneNumberKit
                 return CNLabeledValue<NSString>(label: ContactsX.mapStringToLabel(string: ob.type), value: ob.value as NSString);
             };
         }
-
+        if(contact.note != nil) {
+                    newContact.note = contact.note!;
+        }
         let store = CNContactStore();
         let saveRequest = CNSaveRequest();
         saveRequest.add(newContact, toContainerWithIdentifier: nil);
@@ -224,7 +232,9 @@ import PhoneNumberKit
                 editContact.emailAddresses = newMails;
             }
         }
-
+        if(contact.note != nil) {
+            editContact.note = contact.note!;
+        }
         let store = CNContactStore();
         let saveRequest = CNSaveRequest();
         saveRequest.update(editContact);
@@ -395,11 +405,113 @@ import PhoneNumberKit
         }
         return ContactsX._PhoneNumberKitInstance!;
     }
-
+  @objc(showNativeAddContact:)
+    func showNativeAddContact(command: CDVInvokedUrlCommand) {
+    _callbackId = command.callbackId;
+     //static var _PhoneNumberKitInstance: PhoneNumberKit? = nil;
+    self.hasPermission { (granted) in
+        guard granted else {
+            self.returnError(error: ErrorCodes.PermissionDenied);
+            return;
+        }
+        
+        // Récupérer les données du contact depuis les arguments
+        let tmpContactOptions = command.argument(at: 0) as? NSDictionary;
+        var newContact: CNMutableContact? = nil;
+        
+        if let contactOptions = tmpContactOptions {
+            // Créer un CNMutableContact à partir des options
+            newContact = CNMutableContact();
+            let contactXOptions = ContactXOptions.init(options: contactOptions);
+            
+            if let firstName = contactXOptions.firstName {
+                newContact!.givenName = firstName;
+            }
+            if let middleName = contactXOptions.middleName {
+                newContact!.middleName = middleName;
+            }
+            if let familyName = contactXOptions.familyName {
+                newContact!.familyName = familyName;
+            }
+            if let organizationName = contactXOptions.organizationName {
+                newContact!.organizationName = organizationName;
+            }
+            if let jobTitle = contactXOptions.jobTitle {
+                newContact!.jobTitle = jobTitle;
+            }
+            if let note = contactXOptions.note {
+                newContact!.note = note;
+            }
+            if let phoneNumbers = contactXOptions.phoneNumbers {
+                newContact!.phoneNumbers = phoneNumbers.map { (ob: ContactXValueTypeOptions) -> CNLabeledValue<CNPhoneNumber> in
+                    return CNLabeledValue<CNPhoneNumber>(label: ContactsX.mapStringToLabel(string: ob.type), value: CNPhoneNumber(stringValue: ob.value));
+                };
+            }
+            if let emails = contactXOptions.emails {
+                newContact!.emailAddresses = emails.map { (ob: ContactXValueTypeOptions) -> CNLabeledValue<NSString> in
+                    return CNLabeledValue<NSString>(label: ContactsX.mapStringToLabel(string: ob.type), value: ob.value as NSString);
+                };
+            }
+        }
+        
+        // Créer et présenter le CNContactViewController
+        let contactViewController: CNContactViewController;
+        if let contact = newContact {
+            contactViewController = CNContactViewController(forNewContact: contact);
+        } else {
+            // Si aucun contact n'est fourni, créer un contact vide
+            contactViewController = CNContactViewController(forNewContact: CNMutableContact());
+        }
+        
+        // Configurer le delegate pour gérer la sauvegarde
+        contactViewController.delegate = self;
+        contactViewController.allowsActions = true;
+        contactViewController.allowsEditing = true;
+        
+        // Créer un UINavigationController pour présenter le view controller
+        let navigationController = UINavigationController(rootViewController: contactViewController);
+        
+        // Présenter le view controller
+        DispatchQueue.main.async {
+            guard let viewController = self.viewController else {
+        self.returnError(error: ErrorCodes.UnknownError, message: "View controller not available");
+        return;
+    }
+            self.viewController.present(navigationController, animated: true, completion: nil);
+        }
+    }
+    }
     enum ErrorCodes:NSNumber {
         case UnsupportedAction = 1
         case WrongJsonObject = 2
         case PermissionDenied = 3
         case UnknownError = 10
+    }
+}
+// MARK: - CNContactViewControllerDelegate
+extension ContactsX: CNContactViewControllerDelegate {
+    func contactViewController(_ viewController: CNContactViewController,
+                               didCompleteWith contact: CNContact?) {
+        // Fermer le navigation controller parent
+        if let navigationController = viewController.navigationController {
+            navigationController.dismiss(animated: true) {
+                if let contact = contact {
+                    // Le contact a été sauvegardé
+                    let options = ContactsXOptions.init(options: [
+                        "fields": [
+                            "phoneNumbers": true,
+                            "emails": true
+                        ]
+                    ]);
+                    let contactResult = ContactX(contact: contact, options: options).getJson() as! [String : Any];
+                    let result: CDVPluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: contactResult);
+                    self.commandDelegate.send(result, callbackId: self._callbackId);
+                } else {
+                    // L'utilisateur a annulé
+                    let result: CDVPluginResult = CDVPluginResult(status: CDVCommandStatus_OK, messageAs: ["cancelled": true]);
+                    self.commandDelegate.send(result, callbackId: self._callbackId);
+                }
+            }
+        }
     }
 }

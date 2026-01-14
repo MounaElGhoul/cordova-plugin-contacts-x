@@ -63,7 +63,13 @@ class ContactX {
         if(options.organizationName) {
             result["organizationName"] = self.contact.organizationName;
         }
-
+        if(options.jobTitle) {
+            result["jobTitle"] = self.contact.jobTitle;
+        }
+        if(options.note) {
+            result["note"] = self.contact.note;
+        }
+        
         return result as NSDictionary;
     }
     

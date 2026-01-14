@@ -34,6 +34,10 @@ var contactsX = {
 
   requestWritePermission: function (success, error) {
     exec(success, error, 'ContactsX', 'requestPermission', [true]);
+  },
+   // ✅ Nouvelle fonction pour iOS : ouvrir l'UI native d'ajout de contact
+   showNativeAddContact: function (contact,success, error) {
+    exec(success, error, 'ContactsX', 'showNativeAddContact', [contact]);
   }
 }
 

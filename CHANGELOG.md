@@ -1,3 +1,11 @@
+### [2.1.3](https://github.com/EinfachHans/cordova-plugin-contacts-x/compare/V2.1.2...V2.1.3) (2024-01-14)
+
+### Features
+
+* **ios:** Add iOS 18+ compatibility support
+
+### [2.1.2](https://github.com/EinfachHans/cordova-plugin-contacts-x/compare/V2.1.1...V2.1.2) (2023-05-04)
+
 ### [2.1.2](https://github.com/EinfachHans/cordova-plugin-contacts-x/compare/V2.1.1...V2.1.2) (2023-05-04)
 
 
