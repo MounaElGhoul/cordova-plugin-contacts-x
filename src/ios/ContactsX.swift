@@ -384,6 +384,8 @@ import PhoneNumberKit
             return CNLabelWork;
         case "mobile":
             return CNLabelPhoneNumberMobile;
+        case "homepage":
+            return CNLabelURLAddressHomePage;
         default:
             return CNLabelOther;
         }
@@ -397,6 +399,8 @@ import PhoneNumberKit
             return "work";
         case CNLabelPhoneNumberMobile:
             return "mobile";
+        case CNLabelURLAddressHomePage:
+            return "homepage";
         default:
             return "other";
         }
