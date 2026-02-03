@@ -459,6 +459,11 @@ import PhoneNumberKit
                     return CNLabeledValue<NSString>(label: ContactsX.mapStringToLabel(string: ob.type), value: ob.value as NSString);
                 };
             }
+            if let urls = contactXOptions.urls {
+                newContact!.urlAddresses = urls.map { (ob: ContactXValueTypeOptions) -> CNLabeledValue<NSString> in
+                    return CNLabeledValue<NSString>(label: ContactsX.mapStringToLabel(string: ob.type), value: ob.value as NSString);
+            };
+            }
         }
         
         // Créer et présenter le CNContactViewController

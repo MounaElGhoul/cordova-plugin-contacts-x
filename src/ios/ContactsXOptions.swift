@@ -47,6 +47,7 @@ class ContactXOptions {
     var organizationName: String? = nil;
     var phoneNumbers: [ContactXValueTypeOptions]? = nil;
     var emails: [ContactXValueTypeOptions]? = nil;
+    var urls: [ContactXValueTypeOptions]? = nil;
     var jobTitle: String? = nil;
     var note: String? = nil;
     
@@ -67,7 +68,22 @@ class ContactXOptions {
             if(emailsArray != nil) {
                 emails = self.parseEmails(array: emailsArray!);
             }
+            let urlsArray = options?.value(forKey: "urls") as? [NSDictionary];
+            if(urlsArray != nil) {
+                urls = self.parseUrls(array: urlsArray!);
+            }
         }
+    }
+    
+    private func parseUrls(array: [NSDictionary]) -> [ContactXValueTypeOptions] {
+    var urlList: [ContactXValueTypeOptions] = [];
+    for urlObject in array {
+        let finalUrl = ContactXValueTypeOptions.init(options: urlObject);
+        if(finalUrl.type != "" && finalUrl.value != "") {
+            urlList.append(finalUrl);
+        }
+    }
+    return urlList;
     }
     
     private func parsePhoneNumbers(array: [NSDictionary]) -> [ContactXValueTypeOptions] {
